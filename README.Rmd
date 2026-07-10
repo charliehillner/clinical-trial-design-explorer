@@ -1,0 +1,6 @@
+---
+title: "README"
+output: html_document
+---
+
+Explore group sequential trial designs and understand how stopping boundaries evolve across interim analyses.
