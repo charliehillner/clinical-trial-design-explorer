@@ -1,0 +1,26 @@
+.explanation-card {
+  border-left-width: 0.25rem;
+}
+
+.explanation-text {
+  line-height: 1.7;
+}
+
+.explanation-progress {
+  height: 0.55rem;
+}
+
+.explanation-hint-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+
+  border: 1px solid currentColor;
+  border-radius: 50%;
+
+  font-weight: 700;
+}

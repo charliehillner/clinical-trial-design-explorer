@@ -3,10 +3,12 @@ library(bslib)
 #library(ggplot2)
 
 source("R/design_calculation.R")
+source("R/explanation_engine.R")
 
 source("modules/mod_design_input.R")
 source("modules/mod_boundary_plot.R")
 source("modules/mod_results_table.R")
+source("modules/mod_explanation.R")
 
 
 ui <- page_sidebar(
@@ -53,6 +55,14 @@ ui <- page_sidebar(
       card_body(
         mod_results_table_ui("results_table")
       )
+    ),
+    
+    nav_panel(
+      title = "Explanation",
+      
+      card_body(
+        mod_explanation_ui("explanation")
+      )
     )
   )
 )
@@ -72,6 +82,12 @@ server <- function(input, output, session) {
     )
   })
   
+  explanation <- reactive({
+    generate_explanation(
+      design_result()
+    )
+  })
+  
   mod_boundary_plot_server(
     id = "boundary_plot",
     design_result = design_result
@@ -80,6 +96,11 @@ server <- function(input, output, session) {
   mod_results_table_server(
     id = "results_table",
     design_result = design_result
+  )
+  
+  mod_explanation_server(
+    id = "explanation",
+    explanation = explanation
   )
 }
 

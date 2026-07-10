@@ -68,29 +68,101 @@ The application is designed around the following objectives.
 
 # Architecture
 
-The application is intentionally divided into independent layers.
+The application follows a layered architecture that separates presentation, application flow, domain logic, and external statistical dependencies.
 
-```text
-User Input
-      │
-      ▼
-Design Parameters
-      │
-      ▼
-Statistical Engine
-      │
-      ▼
-Result Object
-      │
-      ├──────────────┐
-      ▼              ▼
-Boundary Plot   Results Table
-      │
-      ▼
-Future Explanation Modules
+```mermaid
+flowchart TD
+    A["Presentation Layer<br/><br/>app.R<br/>Boundary Plot Tab<br/>Boundary Table Tab<br/>Explanation Tab"]
+
+    B["UI Modules Layer<br/><br/>mod_design_input.R<br/>mod_boundary_plot.R<br/>mod_results_table.R<br/>mod_explanation.R"]
+
+    C["Domain Logic Layer<br/><br/>design_calculation.R<br/>explanation_engine.R<br/>validation.R"]
+
+    D["External Statistical Library<br/><br/>gsDesign"]
+
+    A --> B
+    B --> C
+    C --> D
 ```
 
-Each layer has exactly one responsibility.
+Each layer has a distinct responsibility.
+
+### Presentation Layer
+
+`app.R` composes the application.
+
+It defines the overall page layout, creates the navigation tabs, initializes the reactive data flow, and connects the individual modules.
+
+It contains as little domain logic as possible.
+
+### UI Modules Layer
+
+The Shiny modules are responsible for individual parts of the user interface.
+
+* `mod_design_input.R` collects the user-defined trial settings.
+* `mod_boundary_plot.R` visualizes the calculated efficacy boundaries.
+* `mod_results_table.R` presents the numerical results.
+* `mod_explanation.R` renders the context-aware explanation.
+
+The modules consume structured data objects instead of calling the statistical library directly.
+
+### Domain Logic Layer
+
+The domain layer contains the application-specific logic.
+
+* `design_calculation.R` creates the group sequential design and transforms the package-specific result into a stable domain object.
+* `explanation_engine.R` derives a structured explanation from the calculated design.
+* `validation.R` validates domain-specific inputs and invariants.
+
+This layer is independent of Shiny and can therefore be tested separately.
+
+### External Statistical Library
+
+The application currently uses `gsDesign` for the underlying group sequential design calculations.
+
+The library is encapsulated behind the domain layer, which prevents package-specific result structures from leaking into the user interface.
+
+---
+
+## Data Flow
+
+```mermaid
+flowchart LR
+    A["User Input"]
+    B["Design Parameters"]
+    C["Statistical Engine"]
+    D["Design Result Object"]
+    E["Explanation Engine"]
+    F["Explanation Object"]
+    G["Boundary Plot"]
+    H["Results Table"]
+    I["Explanation UI"]
+
+    A --> B
+    B --> C
+    C --> D
+
+    D --> G
+    D --> H
+    D --> E
+
+    E --> F
+    F --> I
+```
+
+The central architectural idea is that the statistical computation produces a domain-specific result object.
+
+This object serves as the stable interface for all downstream components:
+
+* visualizations,
+* tables,
+* statistical summaries,
+* and contextual explanations.
+
+The explanation engine produces a second structured object that contains domain meaning without any Shiny elements or HTML tags.
+
+This keeps application logic and presentation logic decoupled.
+
 
 ## Design Parameters
 
