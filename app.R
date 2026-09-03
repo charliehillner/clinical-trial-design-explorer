@@ -9,6 +9,7 @@ source("modules/mod_design_input.R")
 source("modules/mod_boundary_plot.R")
 source("modules/mod_results_table.R")
 source("modules/mod_explanation.R")
+source("modules/mod_alpha_spending_plot.R")
 
 
 ui <- page_sidebar(
@@ -63,6 +64,16 @@ ui <- page_sidebar(
       card_body(
         mod_explanation_ui("explanation")
       )
+    ),
+    
+    nav_panel(
+      "Alpha spending",
+      
+      card_body(
+        mod_alpha_spending_plot_ui(
+          "alpha_spending_plot"
+        )
+      )
     )
   )
 )
@@ -101,6 +112,11 @@ server <- function(input, output, session) {
   mod_explanation_server(
     id = "explanation",
     explanation = explanation
+  )
+  
+  mod_alpha_spending_plot_server(
+    id = "alpha_spending_plot",
+    design_result = design_result
   )
 }
 

@@ -395,3 +395,51 @@ test_that("five analyses are supported", {
     1
   )
 })
+
+test_that(
+  "explanation contains alpha spending interpretation",
+  {
+    result <- calculate_design(
+      boundary_type = "obrien_fleming"
+    )
+    
+    explanation <- generate_explanation(
+      result
+    )
+    
+    expect_type(
+      explanation$alpha_spending,
+      "character"
+    )
+    
+    expect_true(
+      nchar(explanation$alpha_spending) > 0
+    )
+  }
+)
+
+test_that(
+  "O'Brien-Fleming spends less alpha early than proportional reference",
+  {
+    result <- calculate_design(
+      alpha = 0.025,
+      number_of_analyses = 3,
+      boundary_type = "obrien_fleming"
+    )
+    
+    first_information <-
+      result$boundaries$information_fraction[1]
+    
+    first_cumulative_alpha <-
+      result$boundaries$cumulative_alpha_spent[1]
+    
+    proportional_alpha <-
+      result$settings$alpha *
+      first_information
+    
+    expect_lt(
+      first_cumulative_alpha,
+      proportional_alpha
+    )
+  }
+)

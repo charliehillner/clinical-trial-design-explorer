@@ -33,18 +33,31 @@ generate_explanation <- function(design_result) {
   first_information <- boundaries$information_fraction[1]
   first_boundary <- boundaries$z_boundary[1]
   first_alpha_spent <- boundaries$alpha_spent[1]
+  first_cumulative_alpha <- boundaries$cumulative_alpha_spent[1]
   
-  final_boundary <- tail(boundaries$z_boundary, 1)
-  final_alpha_spent <- tail(boundaries$cumulative_alpha_spent, 1)
+  final_boundary <- tail(
+    boundaries$z_boundary,
+    1
+  )
+  
+  final_alpha_spent <- tail(
+    boundaries$cumulative_alpha_spent,
+    1
+  )
   
   fixed_boundary <- fixed_design$z_boundary
   
+  proportional_alpha_at_first_analysis <-
+    settings$alpha * first_information
+  
   list(
-    title = create_explanation_title(boundary_type),
+    title = create_explanation_title(
+      boundary_type
+    ),
     
     summary = create_summary(
-      boundary_type = boundary_type,
-      number_of_analyses = number_of_analyses
+      boundary_type,
+      number_of_analyses
     ),
     
     current_design = create_current_design_interpretation(
@@ -52,8 +65,18 @@ generate_explanation <- function(design_result) {
       number_of_analyses = number_of_analyses,
       first_information = first_information,
       first_boundary = first_boundary,
-      fixed_boundary = fixed_boundary,
-      first_alpha_spent = first_alpha_spent
+      first_alpha_spent = first_alpha_spent,
+      fixed_boundary = fixed_boundary
+    ),
+    
+    alpha_spending = create_alpha_spending_interpretation(
+      boundary_type = boundary_type,
+      number_of_analyses = number_of_analyses,
+      first_information = first_information,
+      first_cumulative_alpha = first_cumulative_alpha,
+      proportional_alpha_at_first_analysis =
+        proportional_alpha_at_first_analysis,
+      overall_alpha = settings$alpha
     ),
     
     rationale = create_rationale(
@@ -63,8 +86,8 @@ generate_explanation <- function(design_result) {
     
     trade_offs = create_trade_offs(
       boundary_type = boundary_type,
-      first_information = first_information,
-      number_of_analyses = number_of_analyses
+      number_of_analyses = number_of_analyses,
+      first_information = first_information
     ),
     
     statistical_details = create_statistical_details(
@@ -77,13 +100,13 @@ generate_explanation <- function(design_result) {
     ),
     
     takeaway = create_takeaway(
-      boundary_type = boundary_type
+      boundary_type
     ),
     
     learning_hint = create_learning_hint(
       boundary_type = boundary_type,
-      first_information = first_information,
-      number_of_analyses = number_of_analyses
+      number_of_analyses = number_of_analyses,
+      first_information = first_information
     )
   )
 }
@@ -180,6 +203,78 @@ create_current_design_interpretation <- function(
   )
 }
 
+create_alpha_spending_interpretation <- function(
+    boundary_type,
+    number_of_analyses,
+    first_information,
+    first_cumulative_alpha,
+    proportional_alpha_at_first_analysis,
+    overall_alpha
+) {
+  
+  if (number_of_analyses == 1L) {
+    return(
+      paste(
+        "There are no interim analyses in this design.",
+        "The full Type I error budget of",
+        format_probability(overall_alpha),
+        "is therefore available at the final analysis."
+      )
+    )
+  }
+  
+  spending_ratio <- if (
+    proportional_alpha_at_first_analysis > 0
+  ) {
+    first_cumulative_alpha /
+      proportional_alpha_at_first_analysis
+  } else {
+    NA_real_
+  }
+  
+  relative_description <-
+    describe_spending_relative_to_proportional(
+      spending_ratio
+    )
+  
+  common_text <- paste(
+    "At the first analysis,",
+    format_percent(first_information),
+    "of the planned information is available.",
+    "The cumulative Type I error spent by this point is",
+    format_probability(first_cumulative_alpha),
+    "compared with",
+    format_probability(
+      proportional_alpha_at_first_analysis
+    ),
+    "under proportional alpha spending.",
+    relative_description
+  )
+  
+  if (boundary_type == "obrien_fleming") {
+    return(
+      paste(
+        common_text,
+        "This illustrates the characteristic O'Brien–Fleming strategy:",
+        "very little of the Type I error budget is released early,",
+        "which results in a demanding early efficacy boundary."
+      )
+    )
+  }
+  
+  if (boundary_type == "pocock") {
+    return(
+      paste(
+        common_text,
+        "The Pocock strategy makes more of the Type I error budget",
+        "available during the interim analyses, making early stopping",
+        "more attainable than under an O'Brien–Fleming design."
+      )
+    )
+  }
+  
+  common_text
+}
 
 create_rationale <- function(boundary_type, first_information) {
   information_sentence <- if (first_information < 0.30) {
@@ -399,6 +494,48 @@ describe_boundary_difference <- function(boundary_difference) {
   }
   
   "close to the fixed-design boundary"
+}
+
+describe_spending_relative_to_proportional <- function(
+    spending_ratio
+) {
+  if (is.na(spending_ratio)) {
+    return("")
+  }
+  
+  if (spending_ratio < 0.25) {
+    return(
+      paste(
+        "This is far below a proportional release",
+        "of the overall alpha budget."
+      )
+    )
+  }
+  
+  if (spending_ratio < 0.75) {
+    return(
+      paste(
+        "This is clearly below a proportional release",
+        "of the overall alpha budget."
+      )
+    )
+  }
+  
+  if (spending_ratio <= 1.25) {
+    return(
+      paste(
+        "This is relatively close to proportional",
+        "alpha spending."
+      )
+    )
+  }
+  
+  return(
+    paste(
+      "This is above a proportional release",
+      "of the overall alpha budget."
+    )
+  )
 }
 
 

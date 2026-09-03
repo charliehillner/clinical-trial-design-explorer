@@ -58,6 +58,38 @@ calculate_design <- function(
   # gsDesign defines alpha as a one-sided Type I error.
   alpha_per_tail <- if (sided == 2L) alpha / 2 else alpha
   
+  fixed_design_boundary <- stats::qnorm(1 - alpha_per_tail)
+  
+  # Fixed-design special case
+  if (number_of_analyses == 1L) {
+    return(
+      list(
+        settings = list(
+          alpha = alpha,
+          alpha_per_tail = alpha_per_tail,
+          sided = sided,
+          number_of_analyses = number_of_analyses,
+          information_times = 1,
+          boundary_type = boundary_type
+        ),
+        
+        boundaries = data.frame(
+          analysis = 1L,
+          information_fraction = 1,
+          z_boundary = fixed_design_boundary,
+          nominal_p_value = alpha,
+          alpha_spent = alpha,
+          cumulative_alpha_spent = alpha
+        ),
+        
+        fixed_design = list(
+          z_boundary = fixed_design_boundary,
+          nominal_p_value = alpha
+        )
+      )
+    )
+  }
+  
   # Calculate group sequential design
   design <- gsDesign::gsDesign(
     k = number_of_analyses,
@@ -71,8 +103,6 @@ calculate_design <- function(
     design = design,
     sided = sided
   )
-  
-  fixed_design_boundary <- stats::qnorm(1 - alpha_per_tail)
   
   list(
     settings = list(

@@ -71,6 +71,11 @@ explanation_main_column_ui <- function(explanation) {
     ),
     
     explanation_text_card_ui(
+      title = "How is the Type I error spent?",
+      content = explanation$alpha_spending
+    ),
+    
+    explanation_text_card_ui(
       title = "Why does this happen?",
       content = explanation$rationale
     ),
